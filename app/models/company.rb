@@ -21,7 +21,6 @@ class Company < ApplicationRecord
 
   before_validation :remove_space
 
-
   def send_reminders
     unless weekend? 
       users = orders.where(date: Time.zone.today).pluck(:user_id)
