@@ -3,7 +3,8 @@ require "test_helper"
 class CompaniesControllerTest  < ActionController::TestCase
 
   before :each do
-    @company = create :company
+    @company = create :company,name: "Company1"
+    @company2 = create :company,name: "Company2"    
     @user = create :user
     @user.update_attribute(:role, "employee")
   end
@@ -58,12 +59,31 @@ class CompaniesControllerTest  < ActionController::TestCase
     assert_redirected_to root_url
   end
 
+  
+  test "Company_admin should not be allowed to update the ordering information of other company" do
+    sign_in_admin
+    get :get_order_details, params: {id: @company2, company:{ name: "Company2"} }, company: {subsidy: -5, start_ordering_at: Time.parse("12 AM"), end_ordering_at: Time.parse("12:30 PM")}
+    assert_redirected_to vendors_url
+  end
+
   test "Ordering Information should not be updated for invalid values" do
     sign_in_admin
     get :get_order_details, params: {id: @company, company:{ name: @company.name} }, company: {subsidy: -5, start_ordering_at: Time.parse("12 AM"), end_ordering_at: Time.parse("12:30 PM")}
-
     assert_response :success
+  end
 
+  test "company admin can't download invalid csv file of other Company" do
+    sign_in_admin
+    old_controller = @controller
+    @controller = UsersController.new
+
+    file_name = File.new(Rails.root.join("test/fixtures/files/invalid_employees.csv"))
+    csv_file = Rack::Test::UploadedFile.new(file_name, 'text/csv')
+    post :add_multiple_employee_records, params: {company_id: @company.id, file: csv_file, commit: "Import"}
+    
+    @controller = old_controller
+    get :download_invalid_csv, params: {id: @company2.id}
+    assert_redirected_to vendors_url
   end
 
   test "should download invalid sample csv file" do
@@ -80,6 +100,18 @@ class CompaniesControllerTest  < ActionController::TestCase
     @controller = old_controller
     get :download_invalid_csv, params: {id: @company.id}
     assert_response :success
+  end
+
+  test "company should not be updated by another company's admin" do
+    sign_in_admin
+    patch :update, params: {id: @company2.id, company:{name: @company2.name}}
+    assert_redirected_to vendors_url
+  end
+
+  test "company should be updated by that company's admin" do
+    sign_in_admin
+    patch :update, params: {id: @company.id, company:{name: @company.name}}
+    assert_redirected_to root_url
   end
 
   test "company should not be updated by an employee" do

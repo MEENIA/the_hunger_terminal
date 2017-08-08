@@ -2,9 +2,16 @@ require "test_helper"
 
 class TerminalsControllerTest < ActionController::TestCase
   
-  before :each do
-    @terminal = create :terminal
-    @company = @terminal.company
+  before :each do    
+    @company = create :company,name: "Company1"
+    @terminal = create :terminal, company: @company
+    @company2 = create :company,name: "Company2"
+  end
+
+  test "company admin won't be allowed to access other company's terminal index" do
+    sign_in_admin
+    get :index, params: {company_id: @company2.id}
+    assert_redirected_to vendors_url
   end
 
   test "should not render index for non logged-in admin"  do
@@ -18,16 +25,28 @@ class TerminalsControllerTest < ActionController::TestCase
     assert_response :success
   end
 
+  test "company admin won't be allowed to add terminals for other company" do
+    sign_in_admin
+    get :new, params: {company_id: @company2.id}
+    assert_redirected_to vendors_url
+  end
+
   test "should get new" do
     sign_in_admin
     get :new, params: {company_id: @company.id}
     assert_response :success  
   end
 
+  test "company admin won't be allowed to create terminals for other company" do
+    sign_in_admin
+    assert_difference 'Terminal.count',0 do
+      post :create, params:
+      {terminal: { name: "kfc", email: "info@kfc.com", landline: "03456789089", payment_made: 0.0, min_order_amount: 50,tax: "",gstin: ""}, company_id: @company2.id}
+    end
+  end
 
   test "should create terminal without uploading menu items" do
     sign_in_admin
-
     assert_difference 'Terminal.count' do
       post :create, params: 
       {terminal: { name: "kfc", email: "info@kfc.com", landline: "03456789089", payment_made: 0.0, min_order_amount: 50,tax: "",gstin: ""}, company_id: @company.id}
@@ -45,7 +64,6 @@ class TerminalsControllerTest < ActionController::TestCase
 
   test "should create terminal without tax but with proper gstin" do
     sign_in_admin
-
     assert_difference 'Terminal.count' do
       post :create, params: 
       {terminal: { name: "kfc", email: "info@kfc.com", landline: "03456789089", payment_made: 0.0, min_order_amount: 50,tax: "",gstin: "11ASDEW1245Z1Z6"}, company_id: @company.id}
@@ -54,7 +72,6 @@ class TerminalsControllerTest < ActionController::TestCase
 
   test "should create terminal with uploading menu items" do
     sign_in_admin
-
     file_name = File.new(Rails.root.join("test/fixtures/files/menu.csv"))
     csv_file = Rack::Test::UploadedFile.new(file_name, 'text/csv')
 
@@ -66,7 +83,6 @@ class TerminalsControllerTest < ActionController::TestCase
 
   test "should not create terminal" do
     sign_in_admin
-
     assert_difference 'Terminal.count', 0 do
       post :create, params: 
       {terminal: { name: "", email: "", landline: "", payment_made: 0.0, min_order_amount: 50,tax: 0}, company_id: @company.id}

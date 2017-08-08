@@ -2,7 +2,7 @@
 class TerminalsController < ApplicationController
 
   load_and_authorize_resource :user
-  load_and_authorize_resource :company, except: [:new, :create]
+  load_and_authorize_resource :company
   
   before_action :authenticate_user!  
   before_action :load_company , except: [:edit ,:update,:download_invalid_csv]

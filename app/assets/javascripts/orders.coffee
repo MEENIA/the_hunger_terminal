@@ -103,14 +103,14 @@ check_for_order_detail_id = (order_detail) ->
     od = order_detail
   od
 
-find_total = (selected_item) -> 
+find_total = (selected_item) ->
     sum = 0
     arr = $('.total')
     $.each arr, (key, value) ->
       num=parseInt($(value).text())
       sum += num
-    tax1 = Math.round((tax/100)*sum)  
-    $('#tax').text(tax1)   
+    tax1 = Math.round((tax/100)*sum)
+    $('#tax').text(tax1)
     if (subsidy < (subsidy/100)*sum)
       $('#discount').text(subsidy)
       $('#grand_total').text(sum+tax1-subsidy)
@@ -119,9 +119,9 @@ find_total = (selected_item) ->
       $('#grand_total').text(sum+tax1-(subsidy/100)*sum)
     $('#total').text(sum)
     $('#order_total_cost').val(sum+tax1)
-    if sum == 0 
+    if sum == 0
       $('.place_order').prop("disabled", true);
       $('i').show()
     else
-      $('.place_order').prop("disabled", false); 
-      $('i').hide()  
+      $('.place_order').prop("disabled", false);
+      $('i').hide()

@@ -28,8 +28,6 @@ class Ability
       can [:read, :update, :get_order_details, :download_invalid_csv], Company, id: user.company_id
       can :manage, Terminal, :company_id => user.company_id
       can :manage, MenuItem
-      can :manage, Order
-      cannot [:edit, :delete], Order, status: ['placed','confirmed','cancelled']
       can :index, :order_management
       can :order_detail, :order_management
       can :forward_orders, :order_management 
